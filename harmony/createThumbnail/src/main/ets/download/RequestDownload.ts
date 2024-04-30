@@ -45,6 +45,7 @@ export default class RequestDownload {
     }
     if(fs.accessSync(voidPath)) {
       callback(voidPath)
+      return
     }
     // 查询到存在正在执行的下载任务，提示并返回
     let tasks = await request.agent.search({
@@ -97,27 +98,5 @@ export default class RequestDownload {
       await request.agent.remove(this.downloadTask.tid);
     }
     this.downloadTask = undefined;
-  }
-
-  async fetchFrameByTime(fb:media.AVFileDescriptor) {
-    // 创建AVImageGenerator对象
-    let avImageGenerator: media.AVImageGenerator = await media.createAVImageGenerator()
-    // 设置fdSrc
-    avImageGenerator.fdSrc = fb;
-    // 初始化入参
-    let timeUs = 0
-    let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
-    let param: media.PixelMapParams = {
-      width : 300,
-      height : 300
-    }
-    // 获取缩略图（promise模式）
-    let pixelMap = await avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
-    console.info('aaaa://==')
-    console.info('aaaa://=='+JSON.stringify(pixelMap))
-
-    // 释放资源（promise模式）
-    avImageGenerator.release()
-    console.info(`release success.`)
   }
 }

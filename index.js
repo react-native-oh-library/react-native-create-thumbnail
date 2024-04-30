@@ -1,3 +1,5 @@
-import {createThumbnail} from "./src/NativeCreateThumbnail";
+import CreateThumbnail from "./src/NativeCreateThumbnail";
 
-export default createThumbnail;
+export const createThumbnail = CreateThumbnail.createThumbnail;
+
+export default CreateThumbnail;

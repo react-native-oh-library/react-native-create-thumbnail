@@ -23,8 +23,6 @@
  */
 import { TurboModule } from '@rnoh/react-native-openharmony/ts';
 import { TM  } from '@rnoh/react-native-openharmony/generated/ts';
-import Config from './model/Config';
-import Thumbnail from './model/Thumbnail';
 import { common } from '@kit.AbilityKit';
 import fs from '@ohos.file.fs';
 import { StringUtil } from './util/StringUtil';
@@ -36,13 +34,12 @@ import fileUri from '@ohos.file.fileuri';
 import RequestDownload from './download/RequestDownload';
 import { fileUtils } from './util/FileUtil';
 
-
 export class CreateThumbnailTurboModule extends TurboModule implements TM.CreateThumbnail.Spec{
 
   private context: common.UIAbilityContext = this.ctx.uiAbilityContext;
   private requestDownload:RequestDownload = new RequestDownload(this.context)
 
-  async createThumbnail(config:Config): Promise<Thumbnail> {
+  async createThumbnail(config:TM.CreateThumbnail.Config): Promise<TM.CreateThumbnail.Thumbnail> {
     console.info('config ====' + JSON.stringify(config))
     const format = config.format ? config.format : "jpeg"
     const cacheDir = this.context.filesDir + '/thumbnails'
@@ -67,7 +64,7 @@ export class CreateThumbnailTurboModule extends TurboModule implements TM.Create
     const fileName = StringUtil.isNullOrEmpty(cacheName) ? ("thumb-" + util.generateRandomUUID(true)) : cacheName + "." + format;
     const imagePath = `${cacheDir}/${fileName}`;
     const file = fs.openSync(imagePath,fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-    
+
     const pixelMap = await this.getPixelMap(filePath,timeStamp);
     const imageInfo = await pixelMap.getImageInfo();
     const imagePackerApi: image.ImagePacker = image.createImagePacker();
@@ -91,18 +88,19 @@ export class CreateThumbnailTurboModule extends TurboModule implements TM.Create
   }
 
   parseThumbnail(imagePath:string,pixelMap:image.PixelMap,format:string,imageInfo:image.ImageInfo) {
-    const thumbnail = new Thumbnail();
-    thumbnail.path = fileUri.getUriFromPath(imagePath);
-    thumbnail.size = pixelMap.getPixelBytesNumber();
-    thumbnail.mime = "image/" + format;
-    thumbnail.width = imageInfo.size.width;
-    thumbnail.height = imageInfo.size.width;
+    const thumbnail:TM.CreateThumbnail.Thumbnail = {
+      "path":fileUri.getUriFromPath(imagePath),
+      "size":pixelMap.getPixelBytesNumber(),
+      "mime":"image/" + format,
+      "width":imageInfo.size.width,
+      "height":imageInfo.size.width,
+    }
     return thumbnail;
   }
   
   async downloadFile(filePath):Promise<string> {
     return new Promise((resolve)=> {
-      this.requestDownload.downloadFile('videos',filePath,(voidPath: string) => {
+      this.requestDownload.downloadFile('video',filePath,(voidPath: string) => {
          resolve(voidPath);
      });
     });
@@ -116,35 +114,36 @@ export class CreateThumbnailTurboModule extends TurboModule implements TM.Create
       let fdSrc = this.parseFdSrc(fileUriObject.path);
       avImageGenerator.fdSrc = fdSrc
     } else if(urlObject.protocol === 'http:' || urlObject.protocol === 'https:'){
-      let voidPath = await this.downloadFile(filePath)
+      const voidPath = await this.downloadFile(filePath)
       if (!voidPath) {
         return Promise.reject('download fail')
       }
       let fdSrc = this.parseFdSrc(voidPath);
       avImageGenerator.fdSrc = fdSrc
     }
-    let timeUs = timeStamp * 1000
-    let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
+    let timeUs = timeStamp * 1000;
+    let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC;
     let param: media.PixelMapParams = {
       width : 300,
       height : 300
-    }
-    let pixelMap = await avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
+    };
+    let pixelMap = await avImageGenerator.fetchFrameByTime(timeUs, queryOption, param);
     if(!pixelMap) {
       return Promise.reject("File doesn't exist or not supported")
-    }
-    avImageGenerator.release()
-    return pixelMap
+    };
+    avImageGenerator.release();
+    return pixelMap;
   }
   
-  parseFdSrc(filePath:string): media.AVFileDescriptor{
-    let file = fs.openSync(filePath, fs.OpenMode.READ_WRITE);
-    let state = fs.statSync(filePath);
+  parseFdSrc(voidPath:string): media.AVFileDescriptor{
+    console.info('filePath ===' + JSON.stringify(voidPath))
+    let file = fs.openSync(voidPath, fs.OpenMode.READ_WRITE|fs.OpenMode.READ_ONLY);
+    let state = fs.statSync(voidPath);
     let fb:media.AVFileDescriptor = {
       fd:file.fd,
       offset:0,
       length:state.size,
-    }
+    };
     return fb;
   }
 }
