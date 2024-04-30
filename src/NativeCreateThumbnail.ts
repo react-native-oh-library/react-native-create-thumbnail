@@ -26,8 +26,4 @@ export interface Spec extends TurboModule {
   createThumbnail(config:Config): Promise<Thumbnail>;
 }
 
-const CreateThumbnail = TurboModuleRegistry.get<Spec>('CreateThumbnail')!;
-
-const createThumbnail = CreateThumbnail.createThumbnail;
-
-export {createThumbnail};
+export default TurboModuleRegistry.get<Spec>('CreateThumbnail')!;
