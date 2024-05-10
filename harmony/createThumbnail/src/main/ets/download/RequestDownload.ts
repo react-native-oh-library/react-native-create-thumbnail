@@ -37,23 +37,23 @@ export default class RequestDownload {
   }
 
   async downloadFile(folder: string,url: string, callback: (voidPath: string) => void){
-    let splitUrl = url.split('//')[1].split('/');
-    const cacheVideoDir = `${this.context?.cacheDir}/${folder}`
-    const voidPath = `${cacheVideoDir}/${splitUrl[splitUrl.length-1]}`;
-    if(!fs.accessSync(cacheVideoDir)) {
-      fs.mkdirSync(cacheVideoDir)
-    }
-    if(fs.accessSync(voidPath)) {
-      callback(voidPath)
-      return
-    }
-    // 查询到存在正在执行的下载任务，提示并返回
+        // 查询到存在正在执行的下载任务，提示并返回
     let tasks = await request.agent.search({
       state: request.agent.State.RUNNING,
       action: request.agent.Action.DOWNLOAD,
       mode: request.agent.Mode.FOREGROUND
-    })
+    });
     if(tasks.length> 0) {
+      return
+    };
+    let splitUrl = url.split('//')[1].split('/');
+    const cacheVideoDir = `${this.context?.cacheDir}/${folder}`;
+    const voidPath = `${cacheVideoDir}/${splitUrl[splitUrl.length-1]}`;
+    if(!fs.accessSync(cacheVideoDir)) {
+      fs.mkdirSync(cacheVideoDir);
+    };
+    if(fs.accessSync(voidPath)) {
+      callback(voidPath)
       return
     }
     let downloadConfig: request.agent.Config = {
@@ -65,7 +65,7 @@ export default class RequestDownload {
       network: request.agent.Network.ANY,
       saveas: `./${folder}/${splitUrl[splitUrl.length-1]}`,
       overwrite: true
-    }
+    };
     console.info(TAG, `downloadFile, downloadConfig = ${JSON.stringify(downloadConfig)}`);
     try {
       this.downloadTask = await request.agent.create(this.context, downloadConfig);
