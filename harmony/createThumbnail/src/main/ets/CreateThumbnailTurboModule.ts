@@ -40,7 +40,6 @@ export class CreateThumbnailTurboModule extends TurboModule implements TM.Create
   private requestDownload:RequestDownload = new RequestDownload(this.context)
 
   async createThumbnail(config:TM.CreateThumbnail.Config): Promise<TM.CreateThumbnail.Thumbnail> {
-    console.info('config ====' + JSON.stringify(config))
     const format = config.format ? config.format : "jpeg"
     const cacheDir = this.context.filesDir + '/thumbnails'
     //创建文件夹
