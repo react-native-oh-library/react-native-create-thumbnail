@@ -12,14 +12,14 @@
   "keywords": [
     "react-native"
   ],
-  "harmony":{
-    "alias":"react-native-create-thumbnail",
+  "harmony": {
+    "alias": "react-native-create-thumbnail",
     "codegenConfig": {
       "specPaths": [
         "./src"
       ]
     }
-   },
+  },
   "author": {
     "name": "Souvik Ghosh",
     "email": "emailtosvk@gmail.com"
@@ -29,6 +29,6 @@
   "readmeFilename": "README.md",
   "peerDependencies": {
     "react-native": ">=0.59.0",
-	"react-native-create-thumbnail": "2.0.0"
+    "react-native-create-thumbnail": "2.0.0"
   }
 }

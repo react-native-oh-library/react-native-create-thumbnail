@@ -59,7 +59,6 @@ export default class RequestDownload {
     let downloadConfig: request.agent.Config = {
       action: request.agent.Action.DOWNLOAD,
       url: url,
-      method: 'POST',
       title: 'download',
       mode: request.agent.Mode.FOREGROUND,
       network: request.agent.Network.ANY,
