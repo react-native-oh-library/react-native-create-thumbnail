@@ -1,0 +1,11 @@
+[
+    {
+        "Name": "react-native-create-thumbnail",
+        "License": "MIT License",
+        "License File": "https://github.com/souvik-ghosh/react-native-create-thumbnail/blob/master/LICENSE",
+        "Version Number": "2.0.0",
+        "Owner" : "xiafeng@huawei.com",
+        "Upstream URL": "https://github.com/souvik-ghosh/react-native-create-thumbnail",
+        "Description": "iOS/Android thumbnail generator with support for both local and remote videos"
+    }
+]
