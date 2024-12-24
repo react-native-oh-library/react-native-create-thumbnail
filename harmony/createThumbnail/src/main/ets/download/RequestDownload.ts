@@ -21,81 +21,54 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import request from '@ohos.request';
-import media from '@ohos.multimedia.media';
+
+import { rcp } from '@kit.RemoteCommunicationKit';
 import common from '@ohos.app.ability.common';
-const TAG:string = 'RequestUpload';
+
+const TAG: string = 'RequestUpload';
 import fs from '@ohos.file.fs';
+import { BusinessError } from '@kit.BasicServicesKit';
 
 export default class RequestDownload {
-
   private context: common.UIAbilityContext | undefined = undefined;
-  private downloadTask: request.agent.Task | undefined = undefined;
 
-  constructor(context:common.UIAbilityContext) {
+  constructor(context: common.UIAbilityContext) {
     this.context = context;
   }
 
-  async downloadFile(folder: string,url: string, callback: (voidPath: string) => void){
-        // 查询到存在正在执行的下载任务，提示并返回
-    let tasks = await request.agent.search({
-      state: request.agent.State.RUNNING,
-      action: request.agent.Action.DOWNLOAD,
-      mode: request.agent.Mode.FOREGROUND
-    });
-    if(tasks.length> 0) {
-      return
-    };
+  async downloadFile(folder: string, url: string, callback: (voidPath: string) => void) {
     let splitUrl = url.split('//')[1].split('/');
     const cacheVideoDir = `${this.context?.cacheDir}/${folder}`;
     const voidPath = `${cacheVideoDir}/${splitUrl[splitUrl.length-1]}`;
-    if(!fs.accessSync(cacheVideoDir)) {
+    if (!fs.accessSync(cacheVideoDir)) {
       fs.mkdirSync(cacheVideoDir);
-    };
-    if(fs.accessSync(voidPath)) {
+    }
+    if (fs.accessSync(voidPath)) {
       callback(voidPath)
       return
     }
-    let downloadConfig: request.agent.Config = {
-      action: request.agent.Action.DOWNLOAD,
-      url: url,
-      title: 'download',
-      mode: request.agent.Mode.FOREGROUND,
-      network: request.agent.Network.ANY,
-      saveas: `./${folder}/${splitUrl[splitUrl.length-1]}`,
-      overwrite: true
-    };
-    console.info(TAG, `downloadFile, downloadConfig = ${JSON.stringify(downloadConfig)}`);
-    try {
-      this.downloadTask = await request.agent.create(this.context, downloadConfig);
-      this.downloadTask.on('completed', (progress: request.agent.Progress) => {
-        console.info(TAG, `download complete, file= ${url}, progress = ${progress.processed}`);
-        callback(voidPath);
-        this.deleteTask();
-      })
-      this.downloadTask.on('failed', async (progress: request.agent.Progress) => {
-        if (this.downloadTask) {
-          let taskInfo = await request.agent.show(this.downloadTask.tid);
-          console.info(TAG, `fail,  resean = ${taskInfo.reason}, faults = ${JSON.stringify(taskInfo.faults)}`);
-        }
-        fs.unlink(voidPath)
-        callback(null);
-        this.deleteTask();
-      })
-      await this.downloadTask.start();
-    } catch (err) {
-      callback(null);
-      fs.unlink(voidPath)
-      console.error(TAG, `task  err, err  = ${JSON.stringify(err)}`);
-    }
-  }
 
-  async deleteTask() {
-    if(this.downloadTask) {
-      this.downloadTask.off('completed');
-      this.downloadTask.off('failed');
-      await request.agent.remove(this.downloadTask.tid);
-    }
-    this.downloadTask = undefined;
+    let downloadToFile: rcp.DownloadToFile = {
+      kind: 'file',
+      file: `${cacheVideoDir}/${splitUrl[splitUrl.length-1]}`,
+      keepLocal: true
+    } as rcp.DownloadToFile
+
+    const securityConfig: rcp.SecurityConfiguration = {
+      remoteValidation: "skip",
+    };
+
+    const session = rcp.createSession({ requestConfiguration: { security: securityConfig } });
+
+    session.downloadToFile(url, downloadToFile).then((response) => {
+      console.info(TAG, `Succeeded in getting the response`);
+      callback(voidPath);
+      session.close();
+    }).catch((err: BusinessError) => {
+      console.error(TAG, `DownloadToFile failed, the error message is ${JSON.stringify(err)}`);
+      fs.unlink(voidPath)
+      callback(null);
+      session.close();
+    });
   }
 }
