@@ -13,7 +13,7 @@ import type { TurboModule } from 'react-native/Libraries/TurboModule/RCTExport';
 export interface Config {
   url: string;
   timeStamp?: number;
-  format?: "jpeg" | "png";
+  format?: string;
   dirSize?: number;
   headers?: Object;
   cacheName?: string;
